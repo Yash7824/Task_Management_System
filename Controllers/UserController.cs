@@ -88,6 +88,14 @@ namespace Task_Management_System.Controllers
             return Ok(oDeleteUserRS);
         }
 
+        [HttpPost]
+        public IActionResult DecryptPassword([FromBody] DecryptPasswordRQ decryptPasswordRQ)
+        {
+            var client = new HttpClient();
+            var response = new UserBL().DecryptPassword(decryptPasswordRQ.password, client);
+            return Ok(response);
+        }
+
 
     }
 }

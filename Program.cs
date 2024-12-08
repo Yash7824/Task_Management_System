@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
+using Task_Managament_System.DL;
+using Task_Managament_System.Repositories;
 using Task_Management_System.BL;
 using Task_Management_System.Constants;
 using Task_Management_System.DL;
@@ -54,6 +56,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IUserRepository, UserDL>();
 builder.Services.AddScoped<ITokenRepository, LoginBL>();
+builder.Services.AddScoped<ITaskRepository, TaskDL>();
 
 
 var app = builder.Build();

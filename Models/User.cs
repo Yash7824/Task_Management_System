@@ -50,4 +50,15 @@
         public string[] tasks_assigned { get; set; } = [];
     }
 
+    public class DecryptPasswordRQ
+    {
+        public string password { get; set; } = string.Empty;
+    }
+
+    public class DecryptPasswordRS
+    {
+        public string status { get; set; } = string.Empty;
+        public string encrypted_password { get; set; } = string.Empty;
+        public string decrypyted_password { get; set; } = string.Empty;
+    }
 }

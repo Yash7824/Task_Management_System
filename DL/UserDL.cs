@@ -18,6 +18,19 @@ namespace Task_Management_System.DL
             {
                 user.user_id = Guid.NewGuid();
                 var encrypted_password = CommonMethod.EncryptAES(user.user_password);
+
+                var oGetAllUsersRS = await GetUsersAsync();
+                var userEmailPresent = oGetAllUsersRS.Users.Any(x => x.user_email == user.user_email);
+
+                if (userEmailPresent)
+                    return new UserCreated
+                    {
+                        status = "Failed",
+                        statusCode = 0,
+                        statusMessage = "User Email Already Exists"
+                    };
+
+
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
                 {
 
@@ -235,14 +248,14 @@ namespace Task_Management_System.DL
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    var oGetUserRS = GetUserAsync(userId);
+                    var oGetUserRS = await GetUserAsync(userId);
 
-                    if (oGetUserRS.Result != null)
+                    if (oGetUserRS != null)
                     {
                         oDeleteUserRS.status = "Success";
                         oDeleteUserRS.statusCode = 1;
-                        oDeleteUserRS.statusMessage = $"User: {oGetUserRS.Result.User.username} deleted successfully";
-                        oDeleteUserRS.User = oGetUserRS.Result.User;
+                        oDeleteUserRS.statusMessage = $"User: {oGetUserRS.User.username} deleted successfully";
+                        oDeleteUserRS.User = oGetUserRS.User;
                     }
                     else
                     {

@@ -56,9 +56,67 @@
     ]
   },
   {
+    "ContainingType": "Task_Management_System.Controllers.TaskController",
+    "Method": "CreateTask",
+    "RelativePath": "api/Task/CreateTask",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "DashboardToken",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "task",
+        "Type": "Task_Managament_System.Models.TaskModel",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Task_Management_System.Controllers.TaskController",
+    "Method": "DeleteTask",
+    "RelativePath": "api/Task/DeleteTask",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "DashboardToken",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "deleteTaskRQ",
+        "Type": "Task_Managament_System.Models.DeleteTaskRQ",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Task_Management_System.Controllers.TaskController",
+    "Method": "GetAllTasks",
+    "RelativePath": "api/Task/GetAllTasks",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "DashboardToken",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Task_Management_System.Controllers.BaseController",
     "Method": "GetCurrentUser",
-    "RelativePath": "api/Task",
+    "RelativePath": "api/Task/GetCurrentUser",
     "HttpMethod": "",
     "IsController": true,
     "Order": 0,
@@ -76,6 +134,48 @@
     ]
   },
   {
+    "ContainingType": "Task_Management_System.Controllers.TaskController",
+    "Method": "GetTask",
+    "RelativePath": "api/Task/GetTask",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "DashboardToken",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "getTaskRQ",
+        "Type": "Task_Managament_System.Models.GetTaskRQ",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Task_Management_System.Controllers.TaskController",
+    "Method": "UpdateTask",
+    "RelativePath": "api/Task/UpdateTask",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "DashboardToken",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "updateTaskRQ",
+        "Type": "Task_Managament_System.Models.UpdateTaskRQ",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Task_Management_System.Controllers.UserController",
     "Method": "CreateUser",
     "RelativePath": "api/User/CreateUser",
@@ -86,6 +186,22 @@
       {
         "Name": "user",
         "Type": "Task_Management_System.Models.User",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Task_Management_System.Controllers.UserController",
+    "Method": "DecryptPassword",
+    "RelativePath": "api/User/DecryptPassword",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "decryptPasswordRQ",
+        "Type": "Task_Management_System.Models.DecryptPasswordRQ",
         "IsRequired": true
       }
     ],

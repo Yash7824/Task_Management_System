@@ -1,5 +1,6 @@
 ﻿using Task_Management_System.Models;
 using Task_Management_System.Repositories;
+using Task_Management_System.Services;
 
 namespace Task_Management_System.BL
 {
@@ -90,6 +91,21 @@ namespace Task_Management_System.BL
             }
 
             return oDeleteUserRs;
+        }
+
+        public DecryptPasswordRS DecryptPassword(string password, HttpClient client)
+        {
+            var odecryptedPasswordRS = new DecryptPasswordRS();
+            var decrypted_password = CommonMethod.DecryptAES(password);
+
+            if (decrypted_password != null)
+            {
+                odecryptedPasswordRS.status = "Success";
+                odecryptedPasswordRS.encrypted_password = password;
+                odecryptedPasswordRS.decrypyted_password = decrypted_password;
+            }
+
+            return odecryptedPasswordRS;
         }
     }
 }
