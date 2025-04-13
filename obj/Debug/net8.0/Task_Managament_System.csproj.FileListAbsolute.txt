@@ -134,10 +134,11 @@ C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSyst
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.Task_Managament_System.props
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.Task_Managament_System.props
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\staticwebassets.pack.json
-C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\Task_Man.1E3FE64C.Up2Date
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\Task_Managament_System.dll
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\refint\Task_Managament_System.dll
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\Task_Managament_System.pdb
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\Task_Managament_System.genruntimeconfig.cache
 C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\ref\Task_Managament_System.dll
+C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\yashr\Yash\Projects\.NET core\Task_Management_System\TaskManagementSystem\bin\Debug\net8.0\Dapper.dll

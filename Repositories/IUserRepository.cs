@@ -6,8 +6,8 @@ namespace Task_Management_System.Repositories
     {
         Task<UserCreated> CreateUserAsync(User user);
         Task<GetUsers> GetUsersAsync();
-        Task<GetUser> GetUserAsync(Guid guid);
-        Task<GetUser> UpdateUserAsync(Guid userId, UpdateUserRQ user);
-        Task<GetUser> DeleteUserAsync(Guid userId);
+        Task<GetUser> GetUserAsync(string? user_id);
+        Task<UpdateUserRS> UpdateUserAsync(string? userId, UpdateUserRQ user);
+        Task<DeleteUserRS> DeleteUserAsync(string? userId);
     }
 }

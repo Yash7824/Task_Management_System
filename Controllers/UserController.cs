@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Task_Management_System.BL;
 using Task_Management_System.Models;
 using Task_Management_System.Repositories;
+using Task_Management_System.Services;
 
 namespace Task_Management_System.Controllers
 {
@@ -38,7 +40,6 @@ namespace Task_Management_System.Controllers
         {
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
-            var currentUserId = GetCurrentUser();
             var response = await userRepository.GetUserAsync(getUserRQ.userID);
             return Ok(response);
             
@@ -49,14 +50,8 @@ namespace Task_Management_System.Controllers
         {
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing." });
-
             var oValidateTokenRs = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if(!oValidateTokenRs.IsValid)
-                return Unauthorized(new {Message = oValidateTokenRs.errorMessage});
-
+            if(oValidateTokenRs.statusCode != 0) return Unauthorized(oValidateTokenRs);
             return Ok(oValidateTokenRs);
         }
 
@@ -66,14 +61,8 @@ namespace Task_Management_System.Controllers
             
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing" });
-
             var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if(!oValidateTokenRS.IsValid)
-                return Unauthorized(new {Message = oValidateTokenRS.errorMessage});
-
+            if (oValidateTokenRS.statusCode != 0) return Unauthorized(oValidateTokenRS);
             var oUpdateUserRS = await new UserBL().UpdateUser(oValidateTokenRS.user_id, user, userRepository, client);
             return Ok(oUpdateUserRS);
         }
@@ -83,14 +72,8 @@ namespace Task_Management_System.Controllers
         {
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing" });
-
             var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if(!oValidateTokenRS.IsValid)
-                return Unauthorized(new {Message = oValidateTokenRS.errorMessage});
-
+            if (oValidateTokenRS.statusCode != 0) return Unauthorized(oValidateTokenRS);
             var oDeleteUserRS = await new UserBL().DeleteUser(oValidateTokenRS.user_id, userRepository, client);
             return Ok(oDeleteUserRS);
         }
@@ -103,7 +86,5 @@ namespace Task_Management_System.Controllers
             var response = new UserBL().DecryptPassword(decryptPasswordRQ.password, client);
             return Ok(response);
         }
-
-
     }
 }

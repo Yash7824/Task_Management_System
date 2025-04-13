@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Metadata;
-using Microsoft.AspNetCore.Mvc;
+﻿using Dapper;
 using Npgsql;
 using Task_Management_System.Constants;
 using Task_Management_System.Models;
@@ -16,19 +15,18 @@ namespace Task_Management_System.DL
 
             try
             {
-                user.user_id = Guid.NewGuid();
                 var encrypted_password = CommonMethod.EncryptAES(user.user_password);
 
                 var oGetAllUsersRS = await GetUsersAsync();
                 var userEmailPresent = oGetAllUsersRS.Users.Any(x => x.user_email == user.user_email);
 
                 if (userEmailPresent)
-                    return new UserCreated
-                    {
-                        status = "Failed",
-                        statusCode = 0,
-                        statusMessage = "User Email Already Exists"
-                    };
+                {
+                    oUserCreatedRs.status = "Failed";
+                    oUserCreatedRs.statusCode = 1;
+                    oUserCreatedRs.statusMessage = "User Email Already Exists";
+                    return oUserCreatedRs;
+                };
 
 
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
@@ -36,30 +34,41 @@ namespace Task_Management_System.DL
 
                     await dbConn.OpenAsync();
 
-                    var query = "INSERT INTO \"Users\" (user_id, username, user_email, user_password, mobile_num, created_at) VALUES (@user_id, @username, @user_email, @user_password, @mobile_num, @created_at)";
+                    var query = $"INSERT INTO USERS (USERNAME, USER_EMAIL, USER_PASSWORD, MOBILE_NUM, CREATED_AT) VALUES (:USERNAME, :USER_EMAIL, :USER_PASSWORD, :MOBILE_NUM, :CREATED_AT)";
 
-                    using (var cmd = new NpgsqlCommand(query, dbConn))
+                    var parameters = new
                     {
-                        cmd.Parameters.AddWithValue("@user_id", user.user_id);
-                        cmd.Parameters.AddWithValue("@username", user.username);
-                        cmd.Parameters.AddWithValue("@user_email", user.user_email);
-                        cmd.Parameters.AddWithValue("@user_password", encrypted_password);
-                        cmd.Parameters.AddWithValue("@mobile_num", user.mobile_num);
-                        cmd.Parameters.AddWithValue("@created_at", DateTime.UtcNow);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
+                        USERNAME = user.username,
+                        USER_EMAIL = user.user_email,
+                        USER_PASSWORD = encrypted_password,
+                        MOBILE_NUM = user.mobile_num,
+                        CREATED_AT = DateTime.UtcNow,
+                    };
 
-                    oUserCreatedRs.status = "Success";
-                    oUserCreatedRs.statusCode = 1;
-                    oUserCreatedRs.statusMessage = "User Created Successfully";
-                    user.user_password = encrypted_password;
-                    oUserCreatedRs.userDetails = user;
+                    int rowsAffected = await dbConn.ExecuteAsync(query, parameters);
+
+                    if(rowsAffected > 0)
+                    {
+                        oUserCreatedRs.status = "Success";
+                        oUserCreatedRs.statusCode = 0;
+                        oUserCreatedRs.statusMessage = "User Created Successfully";
+                        user.user_password = encrypted_password;
+                        oUserCreatedRs.userDetails = user;
+                    }
+                    else
+                    {
+                        oUserCreatedRs.status = "Failed";
+                        oUserCreatedRs.statusCode = 1;
+                        oUserCreatedRs.statusMessage = "User Not Inserted";
+                        user.user_password = encrypted_password;
+                        oUserCreatedRs.userDetails = user;
+                    }
                 };
             }
             catch (Exception ex)
             {
                 oUserCreatedRs.status = "Failed";
-                oUserCreatedRs.statusCode = 0;
+                oUserCreatedRs.statusCode = 2;
                 oUserCreatedRs.statusMessage = ex.Message;
             }
 
@@ -76,49 +85,26 @@ namespace Task_Management_System.DL
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
                 {
                     await dbConn.OpenAsync();
-                    var query = "SELECT * FROM \"Users\"";
+                    var query = $"SELECT * FROM USERS";
+                    var result = (await dbConn.QueryAsync<User>(query)).ToList();
 
-                    using (var cmd = new NpgsqlCommand(query, dbConn))
-                    {
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                User user = new User
-                                {
-                                    user_id = reader.GetFieldValue<Guid>(reader.GetOrdinal("user_id")),
-                                    username = reader.GetString(reader.GetOrdinal("username")),
-                                    user_email = reader.GetString(reader.GetOrdinal("user_email")),
-                                    user_password = reader.GetString(reader.GetOrdinal("user_password")),
-                                    mobile_num = reader.GetString(reader.GetOrdinal("mobile_num")),
-                                    tasks_assigned = reader.IsDBNull(reader.GetOrdinal("tasks_assigned"))
-                                         ? Array.Empty<string>()
-                                         : reader.GetFieldValue<string[]>(reader.GetOrdinal("tasks_assigned")),
-                                    created_at = reader.GetDateTime(reader.GetOrdinal("created_at"))
-                                };
-
-                                users.Add(user);
-                            }
-                        }
-                    }
+                    oGetUsersRs.status = "Success";
+                    oGetUsersRs.statusCode = 0;
+                    oGetUsersRs.statusMessage = $"Total Number of Users: {result.Count}";
+                    oGetUsersRs.Users = result;
                 }
-
-                oGetUsersRs.status = "Success";
-                oGetUsersRs.statusCode = 1;
-                oGetUsersRs.statusMessage = $"Total Number of Users: {users.Count}";
-                oGetUsersRs.Users = users;
             }
             catch (Exception ex)
             {
                 oGetUsersRs.status = "Failed";
-                oGetUsersRs.statusCode = 0;
-                oGetUsersRs.statusMessage = ex.Message;
+                oGetUsersRs.statusCode = 2;
+                oGetUsersRs.statusMessage = $"Exception Occurred in UserDL.GetUsersAsync(): {ex.Message}";
             }
 
             return oGetUsersRs;
         }
 
-        public async Task<GetUser> GetUserAsync(Guid guid)
+        public async Task<GetUser> GetUserAsync(string? userID)
         {
             var oGetUserRs = new GetUser();
 
@@ -127,33 +113,22 @@ namespace Task_Management_System.DL
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
                 {
                     await dbConn.OpenAsync();
-                    string query = "SELECT * FROM \"Users\" WHERE user_id = :userID";
+                    string query = $"SELECT * FROM USERS WHERE USER_ID = :userID LIMIT 1";
+                    var parameter = new { userID };
+                    var result = await dbConn.QueryFirstOrDefaultAsync<User>(query, parameter);
 
-                    using (var cmd = new NpgsqlCommand(query, dbConn))
+                    oGetUserRs.status = "Success";
+                    oGetUserRs.statusCode = 0;
+
+                    if (result != null)
                     {
-                        cmd.Parameters.AddWithValue("userID", guid);
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            if (await reader.ReadAsync())
-                            {
-                                User user = new User
-                                {
-                                    user_id = reader.GetFieldValue<Guid>(reader.GetOrdinal("user_id")),
-                                    username = reader.GetString(reader.GetOrdinal("username")),
-                                    user_email = reader.GetString(reader.GetOrdinal("user_email")),
-                                    user_password = reader.GetString(reader.GetOrdinal("user_password")),
-                                    mobile_num = reader.GetString(reader.GetOrdinal("mobile_num")),
-                                    tasks_assigned = reader.IsDBNull(reader.GetOrdinal("tasks_assigned")) ? 
-                                        Array.Empty<string>() : reader.GetFieldValue<string[]>(reader.GetOrdinal("tasks_assigned")),
-                                    created_at = reader.GetDateTime(reader.GetOrdinal("created_at"))
-                                };
-
-                                oGetUserRs.status = "Success";
-                                oGetUserRs.statusCode = 1;
-                                oGetUserRs.statusMessage = "User Fetched Successfully";
-                                oGetUserRs.User = user;
-                            }
-                        }
+                        oGetUserRs.statusMessage = "User Fetched Successfully";
+                        oGetUserRs.User = result;
+                    }
+                    else
+                    {
+                        oGetUserRs.statusMessage = "Unable To Fetch the User!";
+                        oGetUserRs.User = null;
                     }
                 }
 
@@ -161,17 +136,16 @@ namespace Task_Management_System.DL
             catch (Exception ex)
             {
                 oGetUserRs.status = "Failed";
-                oGetUserRs.statusCode = 0;
-                oGetUserRs.statusMessage = $"Unable to fetch the user, exception: {ex.Message}";
+                oGetUserRs.statusCode = 2;
+                oGetUserRs.statusMessage = $"Exception occurred in UserDL.GetUserAsync(): {ex.Message}";
             }
 
             return oGetUserRs;
         }
 
-        public async Task<GetUser> UpdateUserAsync(Guid userId, UpdateUserRQ userRQ)
+        public async Task<UpdateUserRS> UpdateUserAsync(string? userId, UpdateUserRQ userRQ)
         {
-            var oUpdateUserRS = new GetUser();
-            DateTime createdAt = DateTime.Now;
+            var oUpdateUserRS = new UpdateUserRS();
             try
             {
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
@@ -179,97 +153,74 @@ namespace Task_Management_System.DL
                     var encrypted_password = CommonMethod.EncryptAES(userRQ.user_password);
                     await dbConn.OpenAsync();
 
-                    string get_CreatedTime_Query = "SELECT created_at FROM \"Users\" where user_id = @user_id";
+                    string query = $"UPDATE USERS SET USERNAME = @USERNAME, USER_EMAIL = @USER_EMAIL, USER_PASSWORD = @USER_PASSWORD, MOBILE_NUM = @MOBILE_NUM, TASKS_ASSIGNED = @TASKS_ASSIGNED WHERE USER_ID = @USER_ID";
 
-                    string query = "UPDATE \"Users\" SET username = @username, user_email = @user_email, user_password = @user_password, mobile_num = @mobile_num, tasks_assigned = @tasks_assigned WHERE user_id = @user_id";
-
-                    using (var cmd = new NpgsqlCommand(get_CreatedTime_Query, dbConn))
+                    var parameters = new
                     {
-                        cmd.Parameters.AddWithValue("@user_id", userId);
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            if(await reader.ReadAsync())
-                            {
-                                createdAt = reader.GetDateTime(reader.GetOrdinal("created_at"));
-                            }
-                        }
-                    }
-
-                    using (var cmd = new NpgsqlCommand(query, dbConn))
-                    {
-                        cmd.Parameters.AddWithValue("@user_id", userId);
-                        cmd.Parameters.AddWithValue("@username", userRQ.username);
-                        cmd.Parameters.AddWithValue("@user_email", userRQ.user_email);
-                        cmd.Parameters.AddWithValue("@user_password", encrypted_password);
-                        cmd.Parameters.AddWithValue("@mobile_num", userRQ.mobile_num);
-                        cmd.Parameters.AddWithValue("@tasks_assigned", userRQ.tasks_assigned);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    User user = new User
-                    {
-                        user_id = userId,
-                        username = userRQ.username,
-                        user_email = userRQ.user_email,
-                        user_password = encrypted_password,
-                        mobile_num = userRQ.mobile_num,
-                        created_at = createdAt,
-                        tasks_assigned = userRQ.tasks_assigned,
+                        USERNAME = userRQ.username,
+                        USER_EMAIL = userRQ.user_email,
+                        USER_PASSWORD = encrypted_password,
+                        MOBILE_NUM = userRQ.mobile_num,
+                        TASKS_ASSIGNED = userRQ.tasks_assigned,
+                        USER_ID = userId
                     };
 
-                    oUpdateUserRS.status = "Success";
-                    oUpdateUserRS.statusCode = 1;
-                    oUpdateUserRS.statusMessage = "User Updated Successfully";
-                    oUpdateUserRS.User = user;
+                    int rowsAffected = await dbConn.ExecuteAsync(query, parameters);
+                    if(rowsAffected > 0)
+                    {
+                        oUpdateUserRS.status = "Success";
+                        oUpdateUserRS.statusCode = 0;
+                        oUpdateUserRS.statusMessage = "User Updated Successfully";
+                    }
+                    else
+                    {
+                        oUpdateUserRS.status = "Failed";
+                        oUpdateUserRS.statusCode = 1;
+                        oUpdateUserRS.statusMessage = "Unable to Update User!";
+                    }
                 }
             }
             catch (Exception ex)
             {
                 oUpdateUserRS.status = "Failed";
-                oUpdateUserRS.statusCode = 0;
-                oUpdateUserRS.statusMessage = $"Unable to update the user, exception: {ex.Message}";
+                oUpdateUserRS.statusCode = 2;
+                oUpdateUserRS.statusMessage = $"Exception occurred in UserDL.UpdateUserAsync(): {ex.Message}";
             }
 
             return oUpdateUserRS;
         }
 
-        public async Task<GetUser> DeleteUserAsync(Guid userId)
+        public async Task<DeleteUserRS> DeleteUserAsync(string? userId)
         {
-            var oDeleteUserRS = new GetUser();
+            var oDeleteUserRS = new DeleteUserRS();
             try
             {
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
                 {
                     await dbConn.OpenAsync();
-                    string query = "DELETE FROM \"Users\" WHERE user_id = @user_id";
-                    using (var cmd = new NpgsqlCommand(query, dbConn))
-                    {
-                        cmd.Parameters.AddWithValue("@user_id", userId);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
+                    string query = "DELETE FROM USERS WHERE USER_ID = @userId";
+                    var parameters = new { userId };
+                    int rowsAffected = await dbConn.ExecuteAsync(query, parameters);
 
-                    var oGetUserRS = await GetUserAsync(userId);
-
-                    if (oGetUserRS != null)
+                    if (rowsAffected > 0)
                     {
                         oDeleteUserRS.status = "Success";
-                        oDeleteUserRS.statusCode = 1;
-                        oDeleteUserRS.statusMessage = $"User: {oGetUserRS.User.username} deleted successfully";
-                        oDeleteUserRS.User = oGetUserRS.User;
+                        oDeleteUserRS.statusCode = 0;
+                        oDeleteUserRS.statusMessage = $"User Deleted Successfully!";
                     }
                     else
                     {
-                        oDeleteUserRS.status = "Success";
+                        oDeleteUserRS.status = "Failed";
                         oDeleteUserRS.statusCode = 1;
-                        oDeleteUserRS.statusMessage = $"User details not fetched but deleted.";
+                        oDeleteUserRS.statusMessage = $"Unable To Delete User!";
                     }
                 }
             }
             catch (Exception ex)
             {
                 oDeleteUserRS.status = "Failed";
-                oDeleteUserRS.statusCode = 0;
-                oDeleteUserRS.statusMessage = $"Unable to delete the user, exception: {ex.Message}";
+                oDeleteUserRS.statusCode = 2;
+                oDeleteUserRS.statusMessage = $"Exception occurred in UserDL.DeleteUserAsync(): {ex.Message}";
             }
 
             return oDeleteUserRS;

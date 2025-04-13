@@ -26,16 +26,10 @@ namespace Task_Management_System.Controllers
             var client = new HttpClient();
 
             if(!ModelState.IsValid) return BadRequest();
+            var oValidateTokenRs = await new LoginBL().ValidateTokenAsync(DashboardToken);
+            if (oValidateTokenRs.statusCode != 0) return Unauthorized(oValidateTokenRs);
 
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing." });
-
-            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-            
-            if(!oValidateTokenRS.IsValid)
-                return Unauthorized(new {Message = oValidateTokenRS.errorMessage});
-
-            var response = await new TaskBL().GetAllTasksAsync(oValidateTokenRS.user_id, taskRepository, client);
+            var response = await new TaskBL().GetAllTasksAsync(oValidateTokenRs.user_id, taskRepository, client);
             return Ok(response);
         }
 
@@ -44,16 +38,10 @@ namespace Task_Management_System.Controllers
         {
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
+            var oValidateTokenRs = await new LoginBL().ValidateTokenAsync(DashboardToken);
+            if (oValidateTokenRs.statusCode != 0) return Unauthorized(oValidateTokenRs);
 
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing." });
-
-            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if (!oValidateTokenRS.IsValid)
-                return Unauthorized(new { Message = oValidateTokenRS.errorMessage });
-
-            var response = await new TaskBL().GetTaskAsync(oValidateTokenRS.user_id, getTaskRQ, taskRepository, client);
+            var response = await new TaskBL().GetTaskAsync(oValidateTokenRs.user_id, getTaskRQ, taskRepository, client);
             return Ok(response);
 
         }
@@ -64,15 +52,10 @@ namespace Task_Management_System.Controllers
             var client = new HttpClient();
 
             if (!ModelState.IsValid) return BadRequest();
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing." });
+            var oValidateTokenRs = await new LoginBL().ValidateTokenAsync(DashboardToken);
+            if (oValidateTokenRs.statusCode != 0) return Unauthorized(oValidateTokenRs);
 
-            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if (!oValidateTokenRS.IsValid)
-                return Unauthorized(new { Message = oValidateTokenRS.errorMessage });
-
-            var response = await new TaskBL().CreateTaskAsync(oValidateTokenRS.user_id, task, taskRepository, client);
+            var response = await new TaskBL().CreateTaskAsync(oValidateTokenRs.user_id, task, taskRepository, client);
             return Ok(response);
 
         }
@@ -82,15 +65,10 @@ namespace Task_Management_System.Controllers
         {
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing." });
+            var oValidateTokenRs = await new LoginBL().ValidateTokenAsync(DashboardToken);
+            if (oValidateTokenRs.statusCode != 0) return Unauthorized(oValidateTokenRs);
 
-            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if (!oValidateTokenRS.IsValid)
-                return Unauthorized(new { Message = oValidateTokenRS.errorMessage });
-
-            var response = await new TaskBL().UpdateTaskAsync(oValidateTokenRS.user_id, updateTaskRQ, taskRepository, client);
+            var response = await new TaskBL().UpdateTaskAsync(oValidateTokenRs.user_id, updateTaskRQ, taskRepository, client);
             return Ok(response);
         }
 
@@ -99,15 +77,10 @@ namespace Task_Management_System.Controllers
         {
             var client = new HttpClient();
             if(!ModelState.IsValid) return BadRequest();
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is missing." });
+            var oValidateTokenRs = await new LoginBL().ValidateTokenAsync(DashboardToken);
+            if (oValidateTokenRs.statusCode != 0) return Unauthorized(oValidateTokenRs);
 
-            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if (!oValidateTokenRS.IsValid)
-                return Unauthorized(new { Message = oValidateTokenRS.errorMessage });
-
-            var response = await new TaskBL().DeleteTaskAsync(oValidateTokenRS.user_id, deleteTaskRQ, taskRepository, client);
+            var response = await new TaskBL().DeleteTaskAsync(oValidateTokenRs.user_id, deleteTaskRQ, taskRepository, client);
             return Ok(response);
         }
 

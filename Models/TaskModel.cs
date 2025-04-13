@@ -9,7 +9,7 @@ namespace Task_Managament_System.Models
         public string task_description { get; set; } = string.Empty;
         public string task_category { get; set; } = string.Empty;
         public DateTime task_created_at { get; set; } = DateTime.Now;
-        public Guid user_id { get; set; }
+        public string user_id { get; set; } = string.Empty;
     }
 
     public class TaskUserInfo
@@ -54,7 +54,7 @@ namespace Task_Managament_System.Models
         public string status { get; set; } = string.Empty;
         public int statusCode { get; set; }
         public string statusMessage { get; set; } = string.Empty;
-        public TaskModel task { get; set; } = new TaskModel();
+        public TaskModel? task { get; set; }
     }
 
 }

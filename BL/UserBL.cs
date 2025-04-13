@@ -17,8 +17,8 @@ namespace Task_Management_System.BL
             catch (Exception ex)
             {
                 oUserCreatedRs.status = "Failed";
-                oUserCreatedRs.statusCode = 0;
-                oUserCreatedRs.statusMessage = ex.Message;
+                oUserCreatedRs.statusCode = 2;
+                oUserCreatedRs.statusMessage = $"Exception occurred in UserBL.UserCreation(): {ex.Message}";
             }
 
             return oUserCreatedRs;
@@ -35,14 +35,14 @@ namespace Task_Management_System.BL
             catch (Exception ex)
             {
                 oGetUsersRs.status = "Failed";
-                oGetUsersRs.statusCode = 0;
-                oGetUsersRs.statusMessage = ex.Message;
+                oGetUsersRs.statusCode = 2;
+                oGetUsersRs.statusMessage = $"Exception Occurred in UserBL.GetUsers(): {ex.Message}";
             }
 
             return oGetUsersRs;
         }
 
-        public async Task<GetUser> GetUser(IUserRepository userRepository, Guid userID, HttpClient client)
+        public async Task<GetUser> GetUser(IUserRepository userRepository, string userID, HttpClient client)
         {
             var oGetUserRs = new GetUser();
             try
@@ -52,16 +52,16 @@ namespace Task_Management_System.BL
             catch (Exception ex)
             {
                 oGetUserRs.status = "Failed";
-                oGetUserRs.statusCode = 0;
-                oGetUserRs.statusMessage = ex.Message;
+                oGetUserRs.statusCode = 2;
+                oGetUserRs.statusMessage = $"Exception Occurred in UserBL.GetUser(): {ex.Message}";
             }
 
             return oGetUserRs;
         }
 
-        public async Task<GetUser> UpdateUser(Guid userId, UpdateUserRQ user, IUserRepository userRepository, HttpClient client)
+        public async Task<UpdateUserRS> UpdateUser(string? userId, UpdateUserRQ user, IUserRepository userRepository, HttpClient client)
         {
-            var oUpdateUserRs = new GetUser();
+            var oUpdateUserRs = new UpdateUserRS();
             try
             {
                 oUpdateUserRs = await userRepository.UpdateUserAsync(userId, user);
@@ -69,16 +69,16 @@ namespace Task_Management_System.BL
             catch(Exception ex)
             {
                 oUpdateUserRs.status = "Failed";
-                oUpdateUserRs.statusCode = 0;
-                oUpdateUserRs.statusMessage = ex.Message;
+                oUpdateUserRs.statusCode = 2;
+                oUpdateUserRs.statusMessage = $"Exception Occurred in UserBL.UpdateUser(): {ex.Message}";
             }
 
             return oUpdateUserRs;
         }
 
-        public async Task<GetUser> DeleteUser(Guid userId, IUserRepository userRepository, HttpClient client)
+        public async Task<DeleteUserRS> DeleteUser(string? userId, IUserRepository userRepository, HttpClient client)
         {
-            var oDeleteUserRs = new GetUser();
+            var oDeleteUserRs = new DeleteUserRS();
             try
             {
                 oDeleteUserRs = await userRepository.DeleteUserAsync(userId);
@@ -86,8 +86,8 @@ namespace Task_Management_System.BL
             catch (Exception ex)
             {
                 oDeleteUserRs.status = "Failed";
-                oDeleteUserRs.statusCode = 0;
-                oDeleteUserRs.statusMessage = ex.Message;
+                oDeleteUserRs.statusCode = 2;
+                oDeleteUserRs.statusMessage = $"Exception Occurred in UserBL.DeleteUser(): {ex.Message}";
             }
 
             return oDeleteUserRs;
@@ -96,15 +96,34 @@ namespace Task_Management_System.BL
         public DecryptPasswordRS DecryptPassword(string password, HttpClient client)
         {
             var odecryptedPasswordRS = new DecryptPasswordRS();
-            var decrypted_password = CommonMethod.DecryptAES(password);
-
-            if (decrypted_password != null)
+            try
             {
-                odecryptedPasswordRS.status = "Success";
-                odecryptedPasswordRS.encrypted_password = password;
-                odecryptedPasswordRS.decrypyted_password = decrypted_password;
+                var decrypted_password = CommonMethod.DecryptAES(password);
+                if (decrypted_password != null)
+                {
+                    odecryptedPasswordRS.status = "Success";
+                    odecryptedPasswordRS.statusCode = 0;
+                    odecryptedPasswordRS.statusMessage = string.Empty;
+                    odecryptedPasswordRS.encrypted_password = password;
+                    odecryptedPasswordRS.decrypyted_password = decrypted_password;
+                }
+                else
+                {
+                    odecryptedPasswordRS.status = "Failed";
+                    odecryptedPasswordRS.statusCode = 1;
+                    odecryptedPasswordRS.statusMessage = "Unable To Decrypt the Password!";
+                    odecryptedPasswordRS.encrypted_password = password;
+                    odecryptedPasswordRS.decrypyted_password = string.Empty;
+                }
             }
-
+            catch(Exception ex)
+            {
+                odecryptedPasswordRS.status = "Failed";
+                odecryptedPasswordRS.statusCode = 2;
+                odecryptedPasswordRS.statusMessage = $"Exception Occurred in UserBL.DecryptPassword(): {ex.Message}";
+                odecryptedPasswordRS.encrypted_password = password;
+            }
+            
             return odecryptedPasswordRS;
         }
     }

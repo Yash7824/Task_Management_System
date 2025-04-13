@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
 using Task_Management_System.Constants;
@@ -67,5 +68,62 @@ namespace Task_Management_System.Services
 
             return keyBytes;
         }
+
+        public static Dictionary<string, string> ExtractClaimsFromRequest(HttpRequest request, string headers = "DashboardToken")
+        {
+            try
+            {
+                var token = string.Empty;
+                var authHeader = request.Headers[headers].FirstOrDefault();
+                if (headers == "Authorization")
+                {
+                    if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                        return new Dictionary<string, string>();
+                    token = authHeader.Substring("Bearer ".Length);
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(authHeader)) return new Dictionary<string, string>();
+                    token = authHeader;
+                }
+
+                var handler = new JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadJwtToken(token);
+                return jwtToken.Claims.ToDictionary(c => c.Type, c => c.Value);
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
+        }
+
+        public static string ExtractUserIDFromRequest(HttpRequest request, string headers = "DashboardToken")
+        {
+            try
+            {
+                var token = string.Empty;
+                var authHeader = request.Headers[headers].FirstOrDefault();
+                if (headers == "Authorization")
+                {
+                    if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ")) return string.Empty;
+                    token = authHeader.Substring("Bearer ".Length);
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(authHeader)) return string.Empty;
+                    token = authHeader;
+                }
+                
+                var handler = new JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadJwtToken(token);
+                var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "user_id");
+                return userIdClaim?.Value ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error extracting user_id from JWT token.", ex);
+            }
+        }
+
     }
 }

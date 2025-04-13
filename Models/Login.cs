@@ -20,9 +20,10 @@ namespace Task_Management_System.Models
 
     public class ValidateTokenRS
     {
-        public bool IsValid { get; set; }
-        public Guid user_id { get; set; }
-        public string errorMessage { get; set; } = string.Empty;
+        public string status { get; set; } = string.Empty;
+        public int statusCode { get; set; }
+        public string statusMessage { get; set; } = string.Empty;
+        public string? user_id { get; set; }
     }
 
 }

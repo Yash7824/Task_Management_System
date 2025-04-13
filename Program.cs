@@ -27,30 +27,52 @@ var serviceProvider = builder.Services.BuildServiceProvider();
 var options = serviceProvider.GetRequiredService<IOptions<AppSettingsModel>>();
 TaskConstant.Initialize(options);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-    var issuer = TaskConstant.JWT_Issuer;
-    var audience = TaskConstant.JWT_Audience;
-    var key = TaskConstant.JWT_Key;
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var issuer = TaskConstant.JWT_Issuer;
+        var audience = TaskConstant.JWT_Audience;
+        var key = TaskConstant.JWT_Key;
 
-    if (issuer != null && audience != null && key != null)
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
+        if (issuer != null && audience != null && key != null)
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = issuer,
-            ValidAudience = audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-        };
-    }
-    else
-    {
-        throw new ApplicationException("JWT configuration values are missing.");
-    }
-});
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true, 
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = issuer,
+                ValidAudience = audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+            };
+
+
+            options.Events = new JwtBearerEvents
+            {
+                OnAuthenticationFailed = context =>
+                {
+                    Console.WriteLine($" Authentication failed: {context.Exception.Message}");
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    Console.WriteLine(" Token successfully validated.");
+                    return Task.CompletedTask;
+                },
+                OnChallenge = context =>
+                {
+                    Console.WriteLine(" Challenge triggered (401 Unauthorized).");
+                    return Task.CompletedTask;
+                }
+            };
+        }
+        else
+        {
+            throw new ApplicationException("JWT configuration values are missing.");
+        }
+    });
+
 
 builder.Services.AddAuthorization();
 

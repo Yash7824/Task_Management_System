@@ -26,12 +26,13 @@ namespace Task_Management_System.BL
                     currentUser = usersObj.Users.FirstOrDefault(x => x.user_email == login.user_email && CommonMethod.DecryptAES(x.user_password) == login.user_password);
                 }
 
-                if (currentUser == null) return new LoginRS
+                if (currentUser == null) 
                 {
-                    status = "Failed",
-                    statusCode = 0,
-                    statusMessage = "No such user exists",
-                    Token = ""
+                    response.status = "Failed";
+                    response.statusCode = 1;
+                    response.statusMessage = "No such user exists";
+                    response.Token = string.Empty;
+                    return response;
                 };
 
                 var token = GenerateToken(currentUser);
@@ -39,21 +40,24 @@ namespace Task_Management_System.BL
                 if (token == null)
                 {
                     response.status = "Failed";
-                    response.statusCode = 0;
+                    response.statusCode = 1;
                     response.statusMessage = "Unsuccessfull attempt to login since token didn't get generated.";
-                    response.Token = "";
+                    response.Token = string.Empty;
                 }
                 else
                 {
                     response.status = "Success";
-                    response.statusCode = 1;
-                    response.statusMessage = "Successfully logged in";
+                    response.statusCode = 0;
+                    response.statusMessage = "Successfully Logged in";
                     response.Token = token;
                 }
 
             }
             catch (Exception ex)
             {
+                response.status = "Failed";
+                response.statusCode = 2;
+                response.statusMessage = $"Exception occured in LoginBL.ValidateUser(): {ex.Message}";
                 throw new Exception(ex.Message);
             }
 
@@ -62,80 +66,59 @@ namespace Task_Management_System.BL
 
         public string GenerateToken(User user)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(TaskConstant.JWT_Key);
-            var tokenDescriptor = new SecurityTokenDescriptor
+            try
             {
-                Subject = new ClaimsIdentity(new[]
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(TaskConstant.JWT_Key);
+                var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    new Claim("user_id", user.user_id.ToString()),
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                    new Claim("user_id", user.user_id),
                     new Claim("username", user.username),
                     new Claim("user_email", user.user_email)
                 }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature
-                )
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
-
-        public string? GenerateTokenPrev(User user)
-        {
-            var key = TaskConstant.JWT_Key;
-            var issuer = TaskConstant.JWT_Issuer;
-            var audience = TaskConstant.JWT_Audience;
-
-            if (key != null && user.username != null && user.user_email != null)
-            {
-                var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-                var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-                #region OldClaims
-                //var claims = new[]
-                //{
-                //    new Claim(ClaimTypes.NameIdentifier, user.user_id.ToString()),
-                //    new Claim(ClaimTypes.Name, user.username),
-                //    new Claim(ClaimTypes.Email, user.user_email),
-                //};
-                #endregion
-
-                var claims = new[]
-                {
-                    new Claim("user_id", user.user_id.ToString()),
-                    new Claim("username", user.username),
-                    new Claim("user_email", user.user_email),
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    Issuer = TaskConstant.JWT_Issuer,
+                    Audience = TaskConstant.JWT_Audience,
+                    SigningCredentials = new SigningCredentials(
+                        new SymmetricSecurityKey(key),
+                        SecurityAlgorithms.HmacSha256Signature
+                    )
                 };
 
-                var token = new JwtSecurityToken(issuer,
-                    audience,
-                    claims,
-                    expires: DateTime.Now.AddMinutes(30),
-                    signingCredentials: credentials);
-
-                return new JwtSecurityTokenHandler().WriteToken(token);
-
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                return tokenHandler.WriteToken(token);
             }
-
-            return null;
-
+            catch(Exception ex)
+            {
+                throw new Exception($"Exception occurred in LoginBL.GenerateToken(): {ex.Message}", ex);
+            }
         }
+
         public async Task<ValidateTokenRS> ValidateTokenAsync(string token)
         {
             var oValidateTokenRS = new ValidateTokenRS();
             try
             {
+                if (string.IsNullOrEmpty(token))
+                {
+                    oValidateTokenRS.status = "Failed";
+                    oValidateTokenRS.statusCode = 1;
+                    oValidateTokenRS.statusMessage = $"Token Is Empty Or Null!";
+                    return oValidateTokenRS;
+                }
+
                 var _secretKey = TaskConstant.JWT_Key;
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var validationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
+                    ValidateIssuer = true,
                     ValidateAudience = false,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey)),
+                    ValidIssuer = TaskConstant.JWT_Issuer,      
+                    ValidAudience = TaskConstant.JWT_Audience,
                     ValidateLifetime = true
                 };
 
@@ -145,15 +128,18 @@ namespace Task_Management_System.BL
 
                 var userId = principal.FindFirst("user_id")?.Value;
 
-                oValidateTokenRS.IsValid = true;
-                oValidateTokenRS.user_id = Guid.Parse(!string.IsNullOrEmpty(userId) ? userId : Guid.Empty.ToString());
-                oValidateTokenRS.errorMessage = "";
+                oValidateTokenRS.status = "Success";
+                oValidateTokenRS.statusCode = 0;
+                oValidateTokenRS.statusMessage = "User Validated Successfully!";
+                oValidateTokenRS.user_id = userId ?? string.Empty;
+                
             }
             catch (Exception ex)
             {
-                oValidateTokenRS.IsValid = false;
-                oValidateTokenRS.user_id = Guid.Empty;
-                oValidateTokenRS.errorMessage = ex.Message;
+                oValidateTokenRS.status = "Failed";
+                oValidateTokenRS.statusCode = 2;
+                oValidateTokenRS.statusMessage = $"Exception occurred in LoginBL.ValidateTokenAsync(): {ex.Message}";
+                oValidateTokenRS.user_id = string.Empty;
             }
 
             return oValidateTokenRS;
