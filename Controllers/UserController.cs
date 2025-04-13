@@ -18,6 +18,7 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> CreateUser(User user)
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             var response = await new UserBL().UserCreation(user, userRepository, client);
             return Ok(response);
 
@@ -27,6 +28,7 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> GetUsers()
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             var response = await new UserBL().GetUsers(userRepository, client);
             return Ok(response);
         }
@@ -35,6 +37,7 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> GetUser([FromBody] GetUserRQ getUserRQ)
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             var currentUserId = GetCurrentUser();
             var response = await userRepository.GetUserAsync(getUserRQ.userID);
             return Ok(response);
@@ -45,6 +48,7 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> GetUserId([FromHeader] string DashboardToken)
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing." });
 
@@ -59,7 +63,9 @@ namespace Task_Management_System.Controllers
         [HttpPut]
         public async Task<ActionResult> UpdateUser([FromHeader] string DashboardToken, [FromBody] UpdateUserRQ user)
         {
+            
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing" });
 
@@ -76,6 +82,7 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> DeleteUser([FromHeader] string DashboardToken)
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing" });
 
@@ -92,6 +99,7 @@ namespace Task_Management_System.Controllers
         public IActionResult DecryptPassword([FromBody] DecryptPasswordRQ decryptPasswordRQ)
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             var response = new UserBL().DecryptPassword(decryptPasswordRQ.password, client);
             return Ok(response);
         }

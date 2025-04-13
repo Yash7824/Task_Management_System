@@ -22,10 +22,12 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> Login(Login login)
         {
             var client = new HttpClient();
-            var response = await tokenRepository.ValidateUser(login, userRepository, client);
-            return Ok(response);
+            if (ModelState.IsValid)
+            {
+                var response = await tokenRepository.ValidateUser(login, userRepository, client);
+                return Ok(response);
+            }
+            return BadRequest();
         }
-
-
     }
 }

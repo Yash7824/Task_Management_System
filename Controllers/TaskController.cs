@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
+using System.Net.Http;
 using Task_Managament_System.BL;
 using Task_Managament_System.Models;
 using Task_Managament_System.Repositories;
@@ -23,6 +24,9 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> GetAllTasks([FromHeader] string DashboardToken)
         {
             var client = new HttpClient();
+
+            if(!ModelState.IsValid) return BadRequest();
+
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing." });
 
@@ -39,6 +43,8 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> GetTask([FromHeader] string DashboardToken, [FromBody] GetTaskRQ getTaskRQ)
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
+
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing." });
 
@@ -56,6 +62,8 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> CreateTask([FromHeader] string DashboardToken, [FromBody] TaskModel task)
         {
             var client = new HttpClient();
+
+            if (!ModelState.IsValid) return BadRequest();
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing." });
 
@@ -73,6 +81,7 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> UpdateTask([FromHeader] string DashboardToken, [FromBody] UpdateTaskRQ updateTaskRQ)
         {
             var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing." });
 
@@ -89,6 +98,7 @@ namespace Task_Management_System.Controllers
         public async Task<ActionResult> DeleteTask([FromHeader] string DashboardToken, [FromBody] DeleteTaskRQ deleteTaskRQ)
         {
             var client = new HttpClient();
+            if(!ModelState.IsValid) return BadRequest();
             if (string.IsNullOrEmpty(DashboardToken))
                 return Unauthorized(new { Message = "Token is missing." });
 
@@ -101,5 +111,26 @@ namespace Task_Management_System.Controllers
             return Ok(response);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GenerateDescription([FromHeader] string DashboardToken, [FromBody] TitleRequest titleRequest)
+        {
+            var client = new HttpClient();
+
+            if(!ModelState.IsValid) return BadRequest();
+            if (string.IsNullOrEmpty(DashboardToken))
+                return Unauthorized(new { Message = "Token is Missing" });
+
+            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
+
+            if (!oValidateTokenRS.IsValid)
+                return Unauthorized(new {Message =  oValidateTokenRS.errorMessage});
+
+            var response = await new TaskBL().GenerateDescription(titleRequest, client);
+            if(response.status == "Failed") return BadRequest(response);
+            return Ok(response);
+
+        }
     }
+
 }
+
