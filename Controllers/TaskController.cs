@@ -111,25 +111,6 @@ namespace Task_Management_System.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> GenerateDescription([FromHeader] string DashboardToken, [FromBody] TitleRequest titleRequest)
-        {
-            var client = new HttpClient();
-
-            if(!ModelState.IsValid) return BadRequest();
-            if (string.IsNullOrEmpty(DashboardToken))
-                return Unauthorized(new { Message = "Token is Missing" });
-
-            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
-
-            if (!oValidateTokenRS.IsValid)
-                return Unauthorized(new {Message =  oValidateTokenRS.errorMessage});
-
-            var response = await new TaskBL().GenerateDescription(titleRequest, client);
-            if(response.status == "Failed") return BadRequest(response);
-            return Ok(response);
-
-        }
     }
 
 }
