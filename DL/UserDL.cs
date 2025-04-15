@@ -1,5 +1,7 @@
 ﻿using Dapper;
+using Newtonsoft.Json;
 using Npgsql;
+using Task_Managament_System.Services;
 using Task_Management_System.Constants;
 using Task_Management_System.Models;
 using Task_Management_System.Repositories;
@@ -9,7 +11,7 @@ namespace Task_Management_System.DL
 {
     public class UserDL : IUserRepository
     {
-        public async Task<UserCreated> CreateUserAsync(User user)
+        public async Task<UserCreated> CreateUserAsync(User user, string correlationID)
         {
             var oUserCreatedRs = new UserCreated();
 
@@ -17,7 +19,7 @@ namespace Task_Management_System.DL
             {
                 var encrypted_password = CommonMethod.EncryptAES(user.user_password);
 
-                var oGetAllUsersRS = await GetUsersAsync();
+                var oGetAllUsersRS = await GetUsersAsync(correlationID);
                 var userEmailPresent = oGetAllUsersRS.Users.Any(x => x.user_email == user.user_email);
 
                 if (userEmailPresent)
@@ -69,13 +71,14 @@ namespace Task_Management_System.DL
             {
                 oUserCreatedRs.status = "Failed";
                 oUserCreatedRs.statusCode = 2;
-                oUserCreatedRs.statusMessage = ex.Message;
+                oUserCreatedRs.statusMessage = $"Exception Occurred in UserDL.CreateUserAsync(): {ex.Message}";
+                await DBLogger.InsertLog("UserDL.CreateUserAsync()", ex.Message, ex.StackTrace, JsonConvert.SerializeObject(user), JsonConvert.SerializeObject(oUserCreatedRs), correlationID, user.user_id);
             }
 
             return oUserCreatedRs;
         }
 
-        public async Task<GetUsers> GetUsersAsync()
+        public async Task<GetUsers> GetUsersAsync(string correlationID)
         {
             var oGetUsersRs = new GetUsers();
             List<User> users = new List<User>();
@@ -99,12 +102,13 @@ namespace Task_Management_System.DL
                 oGetUsersRs.status = "Failed";
                 oGetUsersRs.statusCode = 2;
                 oGetUsersRs.statusMessage = $"Exception Occurred in UserDL.GetUsersAsync(): {ex.Message}";
+                await DBLogger.InsertLog("UserDL.GetUsersAsync()", ex.Message, ex.StackTrace, "", JsonConvert.SerializeObject(oGetUsersRs), correlationID, "");
             }
 
             return oGetUsersRs;
         }
 
-        public async Task<GetUser> GetUserAsync(string? userID)
+        public async Task<GetUser> GetUserAsync(string? userID, string correlationID)
         {
             var oGetUserRs = new GetUser();
 
@@ -138,12 +142,13 @@ namespace Task_Management_System.DL
                 oGetUserRs.status = "Failed";
                 oGetUserRs.statusCode = 2;
                 oGetUserRs.statusMessage = $"Exception occurred in UserDL.GetUserAsync(): {ex.Message}";
+                await DBLogger.InsertLog("UserDL.GetUserAsync()", ex.Message, ex.StackTrace, userID, JsonConvert.SerializeObject(oGetUserRs), correlationID, userID);
             }
 
             return oGetUserRs;
         }
 
-        public async Task<UpdateUserRS> UpdateUserAsync(string? userId, UpdateUserRQ userRQ)
+        public async Task<UpdateUserRS> UpdateUserAsync(string? userId, UpdateUserRQ userRQ, string correlationID)
         {
             var oUpdateUserRS = new UpdateUserRS();
             try
@@ -185,12 +190,13 @@ namespace Task_Management_System.DL
                 oUpdateUserRS.status = "Failed";
                 oUpdateUserRS.statusCode = 2;
                 oUpdateUserRS.statusMessage = $"Exception occurred in UserDL.UpdateUserAsync(): {ex.Message}";
+                await DBLogger.InsertLog("UserDL.UpdateUserAsync()", ex.Message, ex.StackTrace, JsonConvert.SerializeObject(userRQ), JsonConvert.SerializeObject(oUpdateUserRS), correlationID, "");
             }
 
             return oUpdateUserRS;
         }
 
-        public async Task<DeleteUserRS> DeleteUserAsync(string? userId)
+        public async Task<DeleteUserRS> DeleteUserAsync(string? userId, string correlationID)
         {
             var oDeleteUserRS = new DeleteUserRS();
             try
@@ -221,6 +227,7 @@ namespace Task_Management_System.DL
                 oDeleteUserRS.status = "Failed";
                 oDeleteUserRS.statusCode = 2;
                 oDeleteUserRS.statusMessage = $"Exception occurred in UserDL.DeleteUserAsync(): {ex.Message}";
+                await DBLogger.InsertLog("UserDL.DeleteUserAsync()", ex.Message, ex.StackTrace, userId, JsonConvert.SerializeObject(oDeleteUserRS), correlationID, userId);
             }
 
             return oDeleteUserRS;

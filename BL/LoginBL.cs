@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
+using Task_Managament_System.Services;
 using Task_Management_System.Constants;
 using Task_Management_System.Models;
 using Task_Management_System.Repositories;
@@ -17,10 +20,11 @@ namespace Task_Management_System.BL
             var usersObj = new GetUsers();
             var currentUser = new User();
             var response = new LoginRS();
+            string correlationID = Guid.NewGuid().ToString();
 
             try
             {
-                usersObj = await userRepository.GetUsersAsync();
+                usersObj = await userRepository.GetUsersAsync(correlationID);
                 if(usersObj.Users.Count > 0)
                 {
                     currentUser = usersObj.Users.FirstOrDefault(x => x.user_email == login.user_email && CommonMethod.DecryptAES(x.user_password) == login.user_password);
@@ -35,7 +39,7 @@ namespace Task_Management_System.BL
                     return response;
                 };
 
-                var token = GenerateToken(currentUser);
+                var token = await GenerateToken(currentUser);
                 
                 if (token == null)
                 {
@@ -58,13 +62,13 @@ namespace Task_Management_System.BL
                 response.status = "Failed";
                 response.statusCode = 2;
                 response.statusMessage = $"Exception occured in LoginBL.ValidateUser(): {ex.Message}";
-                throw new Exception(ex.Message);
+                await DBLogger.InsertLog("LoginBL.ValidateUser()", ex.Message, ex.StackTrace, JsonConvert.SerializeObject(login), JsonConvert.SerializeObject(response), correlationID, currentUser?.user_id);
             }
 
             return response;
         }
 
-        public string GenerateToken(User user)
+        public async Task<string> GenerateToken(User user)
         {
             try
             {
@@ -92,6 +96,8 @@ namespace Task_Management_System.BL
             }
             catch(Exception ex)
             {
+                string correlationID = Guid.NewGuid().ToString();
+                await DBLogger.InsertLog("LoginBL.GenerateToken()", ex.Message, ex.StackTrace, JsonConvert.SerializeObject(user), "", correlationID, "");
                 throw new Exception($"Exception occurred in LoginBL.GenerateToken(): {ex.Message}", ex);
             }
         }
@@ -139,7 +145,8 @@ namespace Task_Management_System.BL
                 oValidateTokenRS.status = "Failed";
                 oValidateTokenRS.statusCode = 2;
                 oValidateTokenRS.statusMessage = $"Exception occurred in LoginBL.ValidateTokenAsync(): {ex.Message}";
-                oValidateTokenRS.user_id = string.Empty;
+                string correlationID = Guid.NewGuid().ToString();
+                await DBLogger.InsertLog("LoginBL.ValidateTokenAsync()", ex.Message, ex.StackTrace, token, JsonConvert.SerializeObject(oValidateTokenRS), correlationID, oValidateTokenRS.user_id);
             }
 
             return oValidateTokenRS;

@@ -40,7 +40,7 @@ namespace Task_Management_System.Controllers
         {
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
-            var response = await userRepository.GetUserAsync(getUserRQ.userID);
+            var response = await new UserBL().GetUser(userRepository, getUserRQ.userID, client);
             return Ok(response);
             
         }
@@ -79,11 +79,11 @@ namespace Task_Management_System.Controllers
         }
 
         [HttpPost]
-        public IActionResult DecryptPassword([FromBody] DecryptPasswordRQ decryptPasswordRQ)
+        public async Task<ActionResult> DecryptPassword([FromBody] DecryptPasswordRQ decryptPasswordRQ)
         {
             var client = new HttpClient();
             if (!ModelState.IsValid) return BadRequest();
-            var response = new UserBL().DecryptPassword(decryptPasswordRQ.password, client);
+            var response = await new UserBL().DecryptPassword(decryptPasswordRQ.password, client);
             return Ok(response);
         }
     }

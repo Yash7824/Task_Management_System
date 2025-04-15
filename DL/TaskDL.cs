@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Newtonsoft.Json;
 using Npgsql;
 using System.Diagnostics;
 using System.Linq.Expressions;
@@ -7,13 +8,15 @@ using System.Threading.Tasks;
 using Task_Managament_System.BL;
 using Task_Managament_System.Models;
 using Task_Managament_System.Repositories;
+using Task_Managament_System.Services;
 using Task_Management_System.Constants;
+using Task_Management_System.Models;
 
 namespace Task_Managament_System.DL
 {
     public class TaskDL : ITaskRepository
     {
-        public async Task<GetAllTasksRS> GetAllTasksAsync(string? user_id)
+        public async Task<GetAllTasksRS> GetAllTasksAsync(string? user_id, string correlationID)
         {
             var oGetAllTasksRS = new GetAllTasksRS();
             List<TaskModel> tasks = new List<TaskModel>();
@@ -38,12 +41,13 @@ namespace Task_Managament_System.DL
                 oGetAllTasksRS.status = "Failed";
                 oGetAllTasksRS.statusCode = 2;
                 oGetAllTasksRS.statusMessage = $"Exception occurred in TaskDL.GetAllTasksAsync(): {ex.Message}";
+                await DBLogger.InsertLog("TaskDL.GetAllTasksAsync()", ex.Message, ex.StackTrace, user_id, JsonConvert.SerializeObject(oGetAllTasksRS), correlationID, user_id);
             }
 
             return oGetAllTasksRS;
         }
 
-        public async Task<TaskRS> GetTaskAsync(string? user_id, GetTaskRQ getTaskRQ)
+        public async Task<TaskRS> GetTaskAsync(string? user_id, GetTaskRQ getTaskRQ, string correlationID)
         {
             var oGetTaskRS = new TaskRS();
             try
@@ -75,11 +79,12 @@ namespace Task_Managament_System.DL
                 oGetTaskRS.status = "Failed";
                 oGetTaskRS.statusCode = 2;
                 oGetTaskRS.statusMessage = $"Exception occurred in TaskDL.GetTaskAsync(): {ex.Message}";
+                await DBLogger.InsertLog("TaskDL.GetTaskAsync()", ex.Message, ex.StackTrace, user_id, JsonConvert.SerializeObject(oGetTaskRS), correlationID, user_id);
             }
 
             return oGetTaskRS;
         }
-        public async Task<TaskRS> CreateTaskAsync(string? user_id, TaskModel task)
+        public async Task<TaskRS> CreateTaskAsync(string? user_id, TaskModel task, string correlationID)
         {
             var oCreateTaskRS = new TaskRS();
 
@@ -122,12 +127,13 @@ namespace Task_Managament_System.DL
                 oCreateTaskRS.status = "Failed";
                 oCreateTaskRS.statusCode = 2;
                 oCreateTaskRS.statusMessage = $"Exception occurred in TaskDL.CreateTaskAsync(): {ex.Message}";
+                await DBLogger.InsertLog("TaskDL.CreateTaskAsync()", ex.Message, ex.StackTrace, user_id, JsonConvert.SerializeObject(oCreateTaskRS), correlationID, user_id);
             }
 
             return oCreateTaskRS;
         }
 
-        public async Task<TaskRS> UpdateTaskAsync(string? user_id, UpdateTaskRQ updateTaskRQ)
+        public async Task<TaskRS> UpdateTaskAsync(string? user_id, UpdateTaskRQ updateTaskRQ, string correlationID)
         {
             var oUpdateTaskRS = new TaskRS();
             DateTime createdAt = DateTime.Now;
@@ -168,11 +174,12 @@ namespace Task_Managament_System.DL
                 oUpdateTaskRS.status = "Failed";
                 oUpdateTaskRS.statusCode = 2;
                 oUpdateTaskRS.statusMessage = $"Exception occurred in TaskDL.UpdateTaskAsync(): {ex.Message}";
+                await DBLogger.InsertLog("TaskDL.UpdateTaskAsync()", ex.Message, ex.StackTrace, user_id, JsonConvert.SerializeObject(oUpdateTaskRS), correlationID, user_id);
             }
             return oUpdateTaskRS;
         }
 
-        public async Task<TaskRS> DeleteTaskAsync(string? user_id, DeleteTaskRQ deleteTaskRQ)
+        public async Task<TaskRS> DeleteTaskAsync(string? user_id, DeleteTaskRQ deleteTaskRQ, string correlationID)
         {
             var oDeleteTaskRS = new TaskRS();
             try
@@ -203,6 +210,7 @@ namespace Task_Managament_System.DL
                 oDeleteTaskRS.status = "Failed";
                 oDeleteTaskRS.statusCode = 2;
                 oDeleteTaskRS.statusMessage = $"Exception occurred in TaskDL.DeleteTaskAsync(): {ex.Message}";
+                await DBLogger.InsertLog("TaskDL.DeleteTaskAsync()", ex.Message, ex.StackTrace, user_id, JsonConvert.SerializeObject(oDeleteTaskRS), correlationID, user_id);
             }
 
             return oDeleteTaskRS;

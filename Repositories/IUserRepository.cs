@@ -4,10 +4,10 @@ namespace Task_Management_System.Repositories
 {
     public interface IUserRepository
     {
-        Task<UserCreated> CreateUserAsync(User user);
-        Task<GetUsers> GetUsersAsync();
-        Task<GetUser> GetUserAsync(string? user_id);
-        Task<UpdateUserRS> UpdateUserAsync(string? userId, UpdateUserRQ user);
-        Task<DeleteUserRS> DeleteUserAsync(string? userId);
+        Task<UserCreated> CreateUserAsync(User user, string correlationID);
+        Task<GetUsers> GetUsersAsync(string correlationID);
+        Task<GetUser> GetUserAsync(string? user_id, string correlationID);
+        Task<UpdateUserRS> UpdateUserAsync(string? userId, UpdateUserRQ user, string correlationID);
+        Task<DeleteUserRS> DeleteUserAsync(string? userId, string correlationID);
     }
 }
