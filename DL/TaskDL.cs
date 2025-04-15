@@ -93,6 +93,7 @@ namespace Task_Managament_System.DL
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
                 {
                     task.task_id = Guid.NewGuid();
+                    task.user_id = user_id ?? string.Empty;
                     await dbConn.OpenAsync();
                     string query = "INSERT INTO TASKS (TASK_ID, TASK_TITLE, TASK_DESCRIPTION, TASK_CATEGORY, TASK_CREATED_AT, USER_ID) VALUES (@TASK_ID, @TASK_TITLE, @TASK_DESCRIPTION, @TASK_CATEGORY, @CREATED_AT, @USER_ID)";
 
@@ -137,6 +138,16 @@ namespace Task_Managament_System.DL
         {
             var oUpdateTaskRS = new TaskRS();
             DateTime createdAt = DateTime.Now;
+
+            oUpdateTaskRS.task = new TaskModel
+            {
+                task_id = updateTaskRQ.task_id,
+                task_title = updateTaskRQ.task_title,
+                task_description = updateTaskRQ.task_description,
+                task_category = updateTaskRQ.task_category,
+                task_created_at = createdAt,
+                user_id = user_id ?? string.Empty
+            };
 
             try
             {

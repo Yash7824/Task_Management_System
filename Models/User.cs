@@ -8,7 +8,6 @@ namespace Task_Management_System.Models
         public string user_email { get; set; } = string.Empty;
         public string user_password { get; set; } = string.Empty;
         public string mobile_num { get; set; } = string.Empty;
-        public string[] tasks_assigned { get; set; } = [];
         public DateTime created_at { get; set; } = DateTime.Now;
     }
 
@@ -48,7 +47,6 @@ namespace Task_Management_System.Models
         public string user_email { get; set; } = string.Empty;
         public string user_password { get; set; } = string.Empty;
         public string mobile_num { get; set; } = string.Empty;
-        public string[] tasks_assigned { get; set; } = [];
     }
 
     public class UpdateUserRS 

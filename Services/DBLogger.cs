@@ -14,7 +14,7 @@ namespace Task_Managament_System.Services
                 using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
                 {
                     await dbConn.OpenAsync();
-                    string query = "INSERT INTO DBLOGGER (METHOD_NAME, MESSAGE, STACK_TRACE, REQUEST, RESPONSE, CORELATION_ID, USER_ID, DATETIME) VALUES (@METHODNAME, @MESSAGE, @STACKTRACE, @REQUEST, @RESPONSE, @CORELATIONID, @USERID, @DATETIME)";
+                    string query = "INSERT INTO DBLOGGER (METHOD_NAME, MESSAGE, STACK_TRACE, REQUEST, RESPONSE, CORRELATION_ID, USER_ID, DATETIME) VALUES (@METHODNAME, @MESSAGE, @STACKTRACE, @REQUEST, @RESPONSE, @CORRELATIONID, @USERID, @DATETIME)";
                     var parameters = new
                     {
                         METHODNAME = methodName,
@@ -22,7 +22,7 @@ namespace Task_Managament_System.Services
                         STACKTRACE = stackTrace,
                         REQUEST = request,
                         RESPONSE = response,
-                        CORELATIONID = corelationID,
+                        CORRELATIONID = corelationID,
                         USERID = userID,
                         DATETIME = DateTime.UtcNow
                     };
@@ -31,7 +31,7 @@ namespace Task_Managament_System.Services
             }
             catch (Exception ex)
             {
-                throw new Exception($"Exception occurred in DBLoggerDL.InsertLog(): {ex.Message}", ex);
+                throw new Exception($"Exception occurred in DBLogger.InsertLog(): {ex.Message}", ex);
             }
         }
     }

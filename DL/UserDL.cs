@@ -158,7 +158,7 @@ namespace Task_Management_System.DL
                     var encrypted_password = CommonMethod.EncryptAES(userRQ.user_password);
                     await dbConn.OpenAsync();
 
-                    string query = $"UPDATE USERS SET USERNAME = @USERNAME, USER_EMAIL = @USER_EMAIL, USER_PASSWORD = @USER_PASSWORD, MOBILE_NUM = @MOBILE_NUM, TASKS_ASSIGNED = @TASKS_ASSIGNED WHERE USER_ID = @USER_ID";
+                    string query = $"UPDATE USERS SET USERNAME = @USERNAME, USER_EMAIL = @USER_EMAIL, USER_PASSWORD = @USER_PASSWORD, MOBILE_NUM = @MOBILE_NUM WHERE USER_ID = @USER_ID";
 
                     var parameters = new
                     {
@@ -166,7 +166,6 @@ namespace Task_Management_System.DL
                         USER_EMAIL = userRQ.user_email,
                         USER_PASSWORD = encrypted_password,
                         MOBILE_NUM = userRQ.mobile_num,
-                        TASKS_ASSIGNED = userRQ.tasks_assigned,
                         USER_ID = userId
                     };
 
