@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using Task_Managament_System.Models;
 using Task_Managament_System.Services;
+using Task_Management_System.Constants;
 using Task_Management_System.DL;
 using Task_Management_System.Models;
 using Task_Management_System.Repositories;
@@ -145,6 +147,68 @@ namespace Task_Management_System.BL
             }
             
             return odecryptedPasswordRS;
+        }
+
+        public async Task<UserDumpRS> FetchUserDump(IUserRepository userRepository, HttpClient client)
+        {
+            var oUserDumpRs = new UserDumpRS();
+            var correlationID = Guid.NewGuid().ToString();
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, TaskConstant.UserURL);
+                var response = await client.SendAsync(request);
+                if (response.IsSuccessStatusCode && response.Content != null)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var userDump = JsonConvert.DeserializeObject<UserDumpResponse>(content);
+
+                    if (userDump != null && userDump.users != null)
+                    {
+                        oUserDumpRs.status = "Success";
+                        oUserDumpRs.statusCode = 0;
+                        oUserDumpRs.statusMessage = "Data Fetched Successfully";
+                        oUserDumpRs.users = userDump.users;
+                    }
+                    else
+                    {
+                        oUserDumpRs.status = "Failed";
+                        oUserDumpRs.statusCode = 1;
+                        oUserDumpRs.statusMessage = "Unable to Deserialize the content!";
+                    }
+                }
+                else
+                {
+                    oUserDumpRs.status = "Failed";
+                    oUserDumpRs.statusCode = 1;
+                    oUserDumpRs.statusMessage = "Unable to fetch data from external API";
+                }
+            }
+            catch (Exception ex)
+            {
+                oUserDumpRs.status = "Failed";
+                oUserDumpRs.statusCode = 2;
+                oUserDumpRs.statusMessage = $"Exception occurred in UserBL.FetchUsersDump(): {ex.Message}";
+                await DBLogger.InsertLog("UserBL.FetchUsersDump()", ex.Message, ex.StackTrace, "", JsonConvert.SerializeObject(oUserDumpRs), correlationID, "");
+            }
+            
+            return oUserDumpRs;
+        }
+
+        public async Task<UserDumpRS> DumpUsers(List<UserDump> users, IUserRepository userRepository, HttpClient client)
+        {
+            var oUserDumpRs = new UserDumpRS();
+            var correlationID = Guid.NewGuid().ToString();
+            try
+            {
+                oUserDumpRs = await userRepository.InsertUserAsync(users, correlationID);
+            }catch(Exception ex)
+            {
+                oUserDumpRs.status = "Failed";
+                oUserDumpRs.statusCode = 2;
+                oUserDumpRs.statusMessage = $"Exception occurred in UserBL.DumpUsers(): {ex.Message}";
+                await DBLogger.InsertLog("UserBL.DumpUsers()", ex.Message, ex.StackTrace, JsonConvert.SerializeObject(users), JsonConvert.SerializeObject(oUserDumpRs), correlationID, "");
+            }
+            return oUserDumpRs;
         }
     }
 }

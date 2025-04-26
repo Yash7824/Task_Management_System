@@ -1,11 +1,13 @@
 ﻿using Dapper;
 using Newtonsoft.Json;
 using Npgsql;
+using Task_Managament_System.Models;
 using Task_Managament_System.Services;
 using Task_Management_System.Constants;
 using Task_Management_System.Models;
 using Task_Management_System.Repositories;
 using Task_Management_System.Services;
+using NpgsqlTypes;
 
 namespace Task_Management_System.DL
 {
@@ -49,7 +51,7 @@ namespace Task_Management_System.DL
 
                     int rowsAffected = await dbConn.ExecuteAsync(query, parameters);
 
-                    if(rowsAffected > 0)
+                    if (rowsAffected > 0)
                     {
                         oUserCreatedRs.status = "Success";
                         oUserCreatedRs.statusCode = 0;
@@ -170,7 +172,7 @@ namespace Task_Management_System.DL
                     };
 
                     int rowsAffected = await dbConn.ExecuteAsync(query, parameters);
-                    if(rowsAffected > 0)
+                    if (rowsAffected > 0)
                     {
                         oUpdateUserRS.status = "Success";
                         oUpdateUserRS.statusCode = 0;
@@ -232,5 +234,62 @@ namespace Task_Management_System.DL
             return oDeleteUserRS;
         }
 
+        public async Task<UserDumpRS> InsertUserAsync(List<UserDump> users, string correlationID)
+        {
+            var oUserDumpRs = new UserDumpRS();
+            int rowsAffected = 0;
+            try
+            {
+                foreach(var user in users)
+                {
+                    using (var dbConn = new NpgsqlConnection(TaskConstant.PostgresDbConn))
+                    {
+                        await dbConn.OpenAsync();
+                        string query = "INSERT INTO USER_DUMP (ID, FIRST_NAME, LAST_NAME, AGE, GENDER, USERNAME, PASSWORD, BIRTH_DATE, IMAGE, ADDRESS, COMPANY, BANK) VALUES (:ID, :FIRST_NAME, :LAST_NAME, :AGE, :GENDER, :USERNAME, :PASSWORD, :BIRTH_DATE, :IMAGE, :ADDRESS, :COMPANY, :BANK)";
+
+                        var parameters = new
+                        {
+                            ID = user.id,
+                            FIRST_NAME = user.first_name,
+                            LAST_NAME = user.last_name,
+                            AGE = user.age,
+                            GENDER = user.gender,
+                            USERNAME = user.username,
+                            PASSWORD = user.password,
+                            BIRTH_DATE = user.birth_date,
+                            IMAGE = user.image,
+                            ADDRESS = JsonConvert.SerializeObject(user.address),
+                            COMPANY = JsonConvert.SerializeObject(user.company),
+                            BANK = JsonConvert.SerializeObject(user.bank)
+                        };
+
+                        rowsAffected += await dbConn.ExecuteAsync(query, parameters);
+                    }
+                }
+
+                if (rowsAffected > 0)
+                {
+                    oUserDumpRs.status = "Success";
+                    oUserDumpRs.statusCode = 0;
+                    oUserDumpRs.statusMessage = $"Users Inserted Successfully and Total Users: {rowsAffected}";
+                }
+                else
+                {
+                    oUserDumpRs.status = "Failed";
+                    oUserDumpRs.statusCode = 1;
+                    oUserDumpRs.statusMessage = "Unable To Insert User Dump!";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                oUserDumpRs.status = "Failed";
+                oUserDumpRs.statusCode = 2;
+                oUserDumpRs.statusMessage = $"Exception occurred in UserDL.InsertUserAsync(): {ex.Message}";
+                await DBLogger.InsertLog("UserDL.InsertUserAsync()", ex.Message, ex.StackTrace, JsonConvert.SerializeObject(users), JsonConvert.SerializeObject(oUserDumpRs), correlationID, "");
+            }
+
+            return oUserDumpRs;
+        }
     }
 }

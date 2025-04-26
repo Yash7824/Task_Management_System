@@ -17,5 +17,7 @@ namespace Task_Management_System.Constants
         public static string JWT_Audience { get { return _appSettings.Value.JWT_Audience; } }
         public static string Encryption_Key { get { return _appSettings.Value.Encryption_Key; } }
         public static string Encyption_IV { get { return _appSettings.Value.Encyption_IV; } }
+        public static string UserURL { get { return _appSettings.Value.UserURL; } }
+        public static string WikiDescriptionURL { get { return _appSettings.Value.WikiDescriptionURL; } }
     }
 }

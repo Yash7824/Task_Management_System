@@ -57,4 +57,20 @@ namespace Task_Managament_System.Models
         public TaskModel? task { get; set; }
     }
 
+    public class TaskDescriptionRQ
+    {
+        public Guid? task_id { get; set; }
+        public string? tasKTitle { get; set; }
+    }
+
+    public class TaskDescriptionRS
+    {
+        public string? status { get; set; }
+        public int statusCode { get; set; }
+        public string? statusMessage { get; set; }
+        public string? title { get; set; }
+        public string? extract { get; set; }
+
+    }
+
 }

@@ -99,6 +99,27 @@
   },
   {
     "ContainingType": "Task_Management_System.Controllers.TaskController",
+    "Method": "GenerateTaskDescription",
+    "RelativePath": "api/Task/GenerateTaskDescription",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "DashboardToken",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "oTaskDescriptionRQ",
+        "Type": "Task_Managament_System.Models.TaskDescriptionRQ",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Task_Management_System.Controllers.TaskController",
     "Method": "GetAllTasks",
     "RelativePath": "api/Task/GetAllTasks",
     "HttpMethod": "GET",
@@ -302,6 +323,22 @@
         "Name": "user",
         "Type": "Task_Management_System.Models.UpdateUserRQ",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Task_Management_System.Controllers.UserController",
+    "Method": "UsersDump",
+    "RelativePath": "api/User/UsersDump",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "DashboardToken",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

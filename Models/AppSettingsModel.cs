@@ -8,6 +8,8 @@
         public string JWT_Audience { get; set; } = string.Empty;
         public string Encryption_Key { get; set; } = string.Empty;
         public string Encyption_IV { get; set; } = string.Empty;
+        public string UserURL { get; set; } = string.Empty;
+        public string WikiDescriptionURL { get; set; } = string.Empty;
 
     }
 }

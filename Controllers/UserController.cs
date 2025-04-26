@@ -86,5 +86,19 @@ namespace Task_Management_System.Controllers
             var response = await new UserBL().DecryptPassword(decryptPasswordRQ.password, client);
             return Ok(response);
         }
+
+        [HttpPost]
+        public async Task<ActionResult> UsersDump([FromHeader] string DashboardToken)
+        {
+            var client = new HttpClient();
+            if(!ModelState.IsValid) return BadRequest();
+            var oValidateTokenRS = await new LoginBL().ValidateTokenAsync(DashboardToken);
+            if (oValidateTokenRS.statusCode != 0) return Unauthorized(oValidateTokenRS);
+            var oUserDumpRS = await new UserBL().FetchUserDump(userRepository, client);
+            if(oUserDumpRS.statusCode != 0) return BadRequest(oUserDumpRS);
+            if(oUserDumpRS.users == null) return Ok(oUserDumpRS);
+            var oDumpUsers = await new UserBL().DumpUsers(oUserDumpRS.users, userRepository, client);
+            return Ok(oDumpUsers);
+        }
     }
 }

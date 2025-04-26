@@ -1,4 +1,5 @@
-﻿using Task_Management_System.Models;
+﻿using Task_Managament_System.Models;
+using Task_Management_System.Models;
 
 namespace Task_Management_System.Repositories
 {
@@ -9,5 +10,6 @@ namespace Task_Management_System.Repositories
         Task<GetUser> GetUserAsync(string? user_id, string correlationID);
         Task<UpdateUserRS> UpdateUserAsync(string? userId, UpdateUserRQ user, string correlationID);
         Task<DeleteUserRS> DeleteUserAsync(string? userId, string correlationID);
+        Task<UserDumpRS> InsertUserAsync(List<UserDump> users, string correlationID);
     }
 }

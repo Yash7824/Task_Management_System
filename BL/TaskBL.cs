@@ -1,8 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
+using System.Web;
 using Task_Managament_System.Models;
 using Task_Managament_System.Repositories;
 using Task_Managament_System.Services;
+using Task_Management_System.Constants;
 using Task_Management_System.Models;
 
 namespace Task_Managament_System.BL
@@ -103,6 +106,57 @@ namespace Task_Managament_System.BL
             }
 
             return oDeleteTaskRS;
+        }
+
+        public async Task<TaskDescriptionRS> GenerateTaskDescriptionAsync(string? user_id, TaskDescriptionRQ oTaskDescriptionRQ, ITaskRepository taskRepository, HttpClient client)
+        {
+            var oTaskDescriptionRS = new TaskDescriptionRS();
+            try
+            {
+                string url = oTaskDescriptionRQ.tasKTitle != null ? string.Format(TaskConstant.WikiDescriptionURL, Uri.EscapeDataString(oTaskDescriptionRQ.tasKTitle)) : string.Empty;
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                var response = await client.SendAsync(request);
+                if (response.IsSuccessStatusCode && response.Content != null)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var responseContent = JsonConvert.DeserializeObject<TaskDescriptionRS>(content);
+                    if (responseContent != null)
+                    {
+                        oTaskDescriptionRS.status = "Success";
+                        oTaskDescriptionRS.statusCode = 0;
+                        oTaskDescriptionRS.statusMessage = string.Empty;
+                        oTaskDescriptionRS.title = responseContent.title;
+                        oTaskDescriptionRS.extract = responseContent.extract;
+                    }
+                    else
+                    {
+                        oTaskDescriptionRS.status = "Failed";
+                        oTaskDescriptionRS.statusCode = 1;
+                        oTaskDescriptionRS.statusMessage = "Unable to fetch the description!";
+                        oTaskDescriptionRS.title = oTaskDescriptionRQ.tasKTitle;
+                        oTaskDescriptionRS.extract = string.Empty;
+                    }
+                }
+                else
+                {
+                    oTaskDescriptionRS.status = "Failed";
+                    oTaskDescriptionRS.statusCode = 1;
+                    oTaskDescriptionRS.statusMessage = "Unable to fetch response!";
+                    oTaskDescriptionRS.title = oTaskDescriptionRQ.tasKTitle;
+                    oTaskDescriptionRS.extract = string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                oTaskDescriptionRS.status = "Failed";
+                oTaskDescriptionRS.statusCode = 2;
+                oTaskDescriptionRS.statusMessage = $"Exception occurred in TaskBL.GenerateTaskDescriptionAsync(): {ex.Message}";
+                oTaskDescriptionRS.title = oTaskDescriptionRQ.tasKTitle;
+                oTaskDescriptionRS.extract = string.Empty;
+                await DBLogger.InsertLog("TaskBL.GenerateTaskDescriptionAsync()", ex.Message, ex.StackTrace, JsonConvert.SerializeObject(oTaskDescriptionRQ), JsonConvert.SerializeObject(oTaskDescriptionRS), Guid.NewGuid().ToString(), user_id);
+            }
+
+            return oTaskDescriptionRS;
         }
     }
 }

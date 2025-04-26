@@ -84,6 +84,17 @@ namespace Task_Management_System.Controllers
             return Ok(response);
         }
 
+        [HttpPost]
+        public async Task<ActionResult> GenerateTaskDescription([FromHeader] string DashboardToken, [FromBody] TaskDescriptionRQ oTaskDescriptionRQ)
+        {
+            var client = new HttpClient();
+            if (!ModelState.IsValid) return BadRequest();
+            var oValidateTokenRs = await new LoginBL().ValidateTokenAsync(DashboardToken);
+            if (oValidateTokenRs.statusCode != 0) return Unauthorized(oValidateTokenRs);
+            var response = await new TaskBL().GenerateTaskDescriptionAsync(oValidateTokenRs.user_id, oTaskDescriptionRQ, taskRepository, client);
+            return Ok(response);
+        }
+
     }
 
 }
